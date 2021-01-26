@@ -17,11 +17,12 @@
 
 
 class ChecklistItem:
-    def __init__(self, task=None):
+    def __init__(self, task=None, schedule=None):
         self.task = task
         self.parent = None
         self.children = []
         self.completed = False
+        self.schedule = schedule
 
     def add_child(self, sub_task):
         sub_task.set_parent(self)
@@ -29,6 +30,9 @@ class ChecklistItem:
 
     def mark_task(self):
         self.completed = True
+
+        for item in self.get_children():
+            item.mark_task()
 
     def unmark_task(self):
         self.completed = False
@@ -45,15 +49,17 @@ class ChecklistItem:
     def get_parent(self):
         return self.parent
 
+    def get_children(self):
+        return self.children
 
-class Checklist:
-    def __init__(self, schedule=0):
-        self.root = ChecklistItem()
-        self.schedule = schedule
+    def get_schedule(self):
+        return self.schedule
 
 
 def print_checklist(root):
     for item in root.children:
+        if root.parent is None:
+            print(root.get_task())
 
         temp = root
         while temp.get_parent() is not None:
@@ -69,26 +75,34 @@ def print_checklist(root):
 
 
 if __name__ == "__main__":
-    test_checklist = Checklist()
+    test_checklist = ChecklistItem("Backpack Checklist")
 
     """
     As a proof of concept, I'll make a checklist similar to the following, x is complete, o is incomplete:
     Backpack Checklist
     o back pocket
-        x laptop
-        o げんき third edition Japanese textbook and workbook with bonus learning exercises
+        o laptop
+        x げんき
+            x げんき workbook 
     o front pocket
         o pens
         o headphones
     """
+    test_checklist.add_child(ChecklistItem("back pocket"))
+    test_checklist.add_child(ChecklistItem("front pocket"))
 
-    test_checklist.root.add_child(ChecklistItem("back pocket"))
-    test_checklist.root.children[0].add_child(ChecklistItem("laptop"))
-    test_checklist.root.children[0].children[0].mark_task()
-    test_checklist.root.children[0].add_child(ChecklistItem("げんき third edition Japanese textbook and workbook with "
-                                                            "bonus learning exercises"))
-    test_checklist.root.add_child(ChecklistItem("front pocket"))
-    test_checklist.root.children[1].add_child(ChecklistItem("pens"))
-    test_checklist.root.children[1].add_child(ChecklistItem("headphones"))
+    sub_checklist = test_checklist.children[0]
+    sub_checklist.add_child(ChecklistItem("laptop"))
+    sub_checklist.add_child(ChecklistItem("げんき"))
 
-    print_checklist(test_checklist.root)
+    sub_checklist = sub_checklist.children[1]
+    sub_checklist.add_child(ChecklistItem("げんき workbook"))
+
+    sub_checklist = test_checklist.children[1]
+    sub_checklist.add_child(ChecklistItem("pens"))
+    sub_checklist.add_child(ChecklistItem("headphones"))
+
+    sub_checklist = test_checklist.children[0].children[1]
+    sub_checklist.mark_task()
+
+    print_checklist(test_checklist)
